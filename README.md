@@ -10,7 +10,7 @@
 # A Linear Parameter-Varying Framework for the Analysis of Time-Varying Optimization Algorithms
 This repository contains the code from our paper
 
-> Jakob, Fabian, and Andrea Iannelli. "A Linear Parameter-Varying Framework for the Analysis of Time-Varying Optimization Algorithms." arXiv preprint arXiv:2501.07461 (2025). 
+> Jakob, Fabian, and Andrea Iannelli. "A Linear Parameter-Varying Framework for the Analysis of Time-Varying Optimization Algorithms." arXiv preprint. arXiv:2501.07461 (2025). 
 
 The code will follow soon!
 
@@ -32,7 +32,7 @@ Will follow soon!
 [license-shield]: https://img.shields.io/badge/License-MIT-T?style=flat&color=blue
 [license-url]: https://github.com/col-tasas/2024-tvopt-algorithm-analysis/blob/main/LICENSE
 <!-- [webpage-shield]: https://img.shields.io/badge/Webpage-Fabian%20Jakob-T?style=flat&logo=codementor&color=green
-[webpage-url]: https://www.ist.uni-stuttgart.de/institute/team/Jakob-00004/ -->
+[webpage-url]: https://www.ist.uni-stuttgart.de/institute/team/Jakob-00004/ add personal webpage -->
 [arxiv-shield]: https://img.shields.io/badge/arXiv-2501.07461-t?style=flat&logo=arxiv&logoColor=white&color=red
 [arxiv-url]: https://arxiv.org/abs/2501.07461
 <!-- [finalpaper-shield]: https://img.shields.io/badge/SIAM-Paper-T?style=flat&color=red
