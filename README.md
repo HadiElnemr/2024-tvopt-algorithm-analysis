@@ -1,11 +1,11 @@
 <!-- PROJECT SHIELDS -->
 [![arXiv][arxiv-shield]][arxiv-url]
-<!-- [![finalpaper][finalpaper-shield]][finalpaper-url] -->
 [![MIT License][license-shield]][license-url]
-<!-- [![Webpage][webpage-shield]][webpage-url] -->
 [![ReseachGate][researchgate-shield]][researchgate-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+<!-- [![finalpaper][finalpaper-shield]][finalpaper-url] -->
 <!-- [![Scholar][scholar-shield]][scholar-url] -->
+<!-- [![Webpage][webpage-shield]][webpage-url] -->
 
 # A Linear Parameter-Varying Framework for the Analysis of Time-Varying Optimization Algorithms
 This repository contains the code from our paper
