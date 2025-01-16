@@ -30,7 +30,7 @@ Will follow soon!
 
 
 [license-shield]: https://img.shields.io/badge/License-MIT-T?style=flat&color=blue
-[license-url]: https://github.com/col-tasas/2024-bounds-finite-set-ID/blob/main/LICENSE
+[license-url]: https://github.com/col-tasas/2024-tvopt-algorithm-analysis/blob/main/LICENSE
 <!-- [webpage-shield]: https://img.shields.io/badge/Webpage-Fabian%20Jakob-T?style=flat&logo=codementor&color=green
 [webpage-url]: https://www.ist.uni-stuttgart.de/institute/team/Jakob-00004/ -->
 [arxiv-shield]: https://img.shields.io/badge/arXiv-2501.07461-t?style=flat&logo=arxiv&logoColor=white&color=red
