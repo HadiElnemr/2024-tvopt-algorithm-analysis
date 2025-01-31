@@ -1,0 +1,6 @@
+numpy
+matplotlib
+cvxpy
+control
+scipy
+tqdm
