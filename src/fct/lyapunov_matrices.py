@@ -4,10 +4,10 @@ from itertools import combinations_with_replacement
 
 
 class PolynomialLyapunovMatrix:
-    def __init__(self, dim_p, poly_degree, n_eta):
-        self.dim_p = dim_p  # Dimension of p
+    def __init__(self, param_dim, poly_degree, n_eta):
+        self.param_dim = param_dim      # Dimension of p
         self.poly_degree = poly_degree  # Degree of polynomial
-        self.n_eta = n_eta  # Dimension of matrix
+        self.n_eta = n_eta              # Dimension of matrix
         
         # Generate polynomial basis terms
         self.basis_terms = self.generate_polynomial_basis()
@@ -21,21 +21,21 @@ class PolynomialLyapunovMatrix:
         """Generates polynomial basis terms up to the specified degree."""
         basis_terms = []
         for deg in range(self.poly_degree + 1):
-            for term in combinations_with_replacement(range(self.dim_p), deg):
+            for term in combinations_with_replacement(range(self.param_dim), deg):
                 basis_terms.append(term)
         return basis_terms
     
 
     def P(self, p):
         """Constructs the polynomial Lyapunov matrix as a cvxpy expression."""
-        P_p = sum(self.lyap_basis[i] * np.prod([p[j]**term.count(j) for j in range(self.dim_p)])
+        P_p = sum(self.lyap_basis[i] * np.prod([p[j]**term.count(j) for j in range(self.param_dim)])
                    for i, term in enumerate(self.basis_terms))
         return P_p
     
 
     def P_numeric(self, p):
         """Evaluates P(p) numerically given the values of the SDP variables."""
-        P_p = sum(self.lyap_basis[i].value * np.prod([p[j]**term.count(j) for j in range(self.dim_p)])
+        P_p = sum(self.lyap_basis[i].value * np.prod([p[j]**term.count(j) for j in range(self.param_dim)])
                    for i, term in enumerate(self.basis_terms))
         return P_p
     
