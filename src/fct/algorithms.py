@@ -1,6 +1,7 @@
 import numpy as np
 import control as ctrl
 
+
 class Algorithm:
     def __init__(self, m=1, L=1, nx=1):
         self._m = m

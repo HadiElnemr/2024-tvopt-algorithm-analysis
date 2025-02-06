@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from fct.algorithms import GradientDescent, Nesterov, TMM
 from fct.objectives import PeriodicExample2D, WindowedLeastSquares
 
-# Simulation
+
 def run_simulation():
 
     # Seed and time horizon
@@ -33,7 +33,7 @@ def run_simulation():
         algorithm = algo_classes[algo_name](1, 1, nx)
         algorithm.initialize(x0)
         xi_0 = algorithm.internal_state
-        # algorithm.compute_bounds(p_set, delta_p_min, delta_p_max, m, L)
+        # algorithm.compute_bounds(p_set, delta_p_min, delta_p_max, @m(p), @L(p))
 
         ### initialize storage lists
         xi_tilde_norm_list = list()
@@ -112,6 +112,7 @@ def run_simulation():
         plt.legend()
 
     plt.show()
+
 
 if __name__ == "__main__":
     run_simulation()

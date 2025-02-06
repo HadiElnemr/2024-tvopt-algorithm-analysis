@@ -62,3 +62,9 @@ class PolynomialLyapunovMatrix:
             return np.inf  # P(p) is not positive definite
         
         return np.sqrt(max_eig / min_eig)
+
+
+class SdpSolver:
+    def __init__():
+        pass
+
