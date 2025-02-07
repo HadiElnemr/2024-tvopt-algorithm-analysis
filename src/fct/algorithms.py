@@ -1,62 +1,33 @@
 import numpy as np
 import control as ctrl
+from .lure import LureComponent
 
 
-class Algorithm:
-    def __init__(self, m=1, L=1, nx=1):
-        self._m = m
-        self._L = L
+class Algorithm(LureComponent):
+    """
+    
+    """
+
+    def __init__(self, m=1, L=1, nx=1, delta_model=False):
+        super().__init__(m, L, delta_model)
         self.nx = nx
-        self.algo_name = None
         self.internal_state = None
-        self.internal_state_dim = None
         self.gradient_function = None
-        self.A = None
-        self.B = None
-        self.C = None
-        self.D = None
-
-    @property
-    def m(self):
-        return self._m
-
-    @property
-    def L(self):
-        return self._L
-
-    @m.setter
-    def m(self, value):
-        self._m = value
-        self._update_state_space()
-
-    @L.setter
-    def L(self, value):
-        self._L = value
-        self._update_state_space()
-
-    def _update_state_space(self, delta_model=False):
-        raise NotImplementedError("Subclasses must implement state-space generation")
+        self.name = None
 
     def initialize(self, xi_0):
         self.internal_state = xi_0
-
-    def update_algorithm(self, m, L, gradient_function=None):
-        self.m = m
-        self.L = L
-        if gradient_function is not None:
-            self.gradient_function = gradient_function
-
-    def get_state_space(self, delta_model=False):
-        self._update_state_space(delta_model)
-        return ctrl.ss(self.A, self.B, self.C, self.D, dt=1, name=self.algo_name)
+            
+    def update_gradient(self, gradient_function):
+        self.gradient_function = gradient_function
 
     def step(self):
         if self.internal_state is None:
-            raise ValueError("Internal state is not initialized. Ensure initialize() is called.")
+            raise ValueError("Internal state is not initialized.")
         if self.A is None or self.B is None or self.C is None:
-            raise ValueError("State-space matrices are not initialized. Ensure ss() is called.")
+            raise ValueError("State-space matrices are not initialized.")
         if self.gradient_function is None:
-            raise ValueError("Gradient callable is not set. Call update_algorithm before step.")
+            raise ValueError("Gradient callable is not set.")
 
         xk = self.C @ self.internal_state
         gk = self.gradient_function(xk)
@@ -64,10 +35,15 @@ class Algorithm:
         return self.internal_state, xk
 
 
+
 class GradientDescent(Algorithm):
-    def __init__(self, m=1, L=1, nx=1):
-        super().__init__(m, L, nx)
-        self.algo_name = 'Gradient descent'
+    """
+    
+    """
+
+    def __init__(self, m=1, L=1, nx=1, delta_model=False):
+        super().__init__(m, L, nx, delta_model)
+        self.name = 'Gradient descent'
         self.internal_state_dim = nx
 
         self.rho_sec = 0.6318359375
@@ -79,9 +55,9 @@ class GradientDescent(Algorithm):
         self.gamma = 0.00022899
 
 
-    def _update_state_space(self, delta_model=False):
+    def _update_state_space(self):
         alpha = 2 / (self.m + self.L)
-        if not delta_model:
+        if not self.delta_model:
             self.A = np.eye(self.nx)
             self.B = -alpha * np.eye(self.nx)
             self.C = np.eye(self.nx)
@@ -94,9 +70,13 @@ class GradientDescent(Algorithm):
 
 
 class Nesterov(Algorithm):
-    def __init__(self, m=1, L=1, nx=1):
-        super().__init__(m, L, nx)
-        self.algo_name = 'Nesterov'
+    """
+    
+    """
+
+    def __init__(self, m=1, L=1, nx=1, delta_model=False):
+        super().__init__(m, L, nx, delta_model)
+        self.name = 'Nesterov'
         self.internal_state_dim = 2*nx
 
         self.rho_sec = 0.7431640625
@@ -108,7 +88,7 @@ class Nesterov(Algorithm):
         self.gamma = 0.00056876
 
 
-    def _update_state_space(self, delta_model=False):
+    def _update_state_space(self):
         kappa = self.L / self.m
         alpha = 1 / self.L
         beta = (np.sqrt(kappa) - 1) / (np.sqrt(kappa) + 1)
@@ -116,7 +96,7 @@ class Nesterov(Algorithm):
         A_base = np.asarray([[1 + beta, -beta], [1, 0]])
         C_base = np.asarray([[1 + beta, -beta]])
 
-        if not delta_model:
+        if not self.delta_model:
             B_base = np.asarray([[-alpha], [0]])
             D_base = np.zeros((1, 1))
         else:
@@ -133,9 +113,13 @@ class Nesterov(Algorithm):
 
 
 class TMM(Algorithm):
-    def __init__(self, m=1, L=1, nx=1):
-        super().__init__(m, L, nx)
-        self.algo_name = 'Triple Momentum'
+    """
+    
+    """
+    
+    def __init__(self, m=1, L=1, nx=1, delta_model=False):
+        super().__init__(m, L, nx, delta_model)
+        self.name = 'Triple Momentum'
         self.internal_state_dim = 2*nx
 
         self.rho_sec = 0.7587890625
@@ -147,7 +131,7 @@ class TMM(Algorithm):
         self.gamma = 0.00089642
 
 
-    def _update_state_space(self, delta_model=False):
+    def _update_state_space(self):
         kappa = self.L / self.m
         rho = 1 - 1 / np.sqrt(kappa)
         alpha = (1 + rho) / self.L
@@ -157,7 +141,7 @@ class TMM(Algorithm):
         A_base = np.asarray([[1 + beta, -beta], [1, 0]])
         C_base = np.asarray([[1 + gamma, -gamma]])
 
-        if not delta_model:
+        if not self.delta_model:
             B_base = np.asarray([[-alpha], [0]])
             D_base = np.zeros((1, 1))
         else:

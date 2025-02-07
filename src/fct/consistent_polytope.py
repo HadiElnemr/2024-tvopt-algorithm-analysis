@@ -2,20 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class ConsistentPolytope:
+    """
+    tbd
+    """
+    
     def __init__(self, params, delta_params_min, delta_params_max, step_size=0.1):
-        """
-        Initializes the class and precomputes the grid points.
-
-        Parameters:
-            params (numpy.ndarray): A 2D array where each row represents a parameter vector.
-            delta_params_min (numpy.ndarray): Minimum allowable deltas for each parameter.
-            delta_params_max (numpy.ndarray): Maximum allowable deltas for each parameter.
-            step_size (float): Step size for generating grid points in the delta ranges.
-        """
         self.grid_points = self._generate_grid(params, delta_params_min, delta_params_max, step_size)
 
+
     def _generate_grid(self, params, delta_params_min, delta_params_max, step_size):
-        """Computes the grid points satisfying the constraints."""
+        """
+        Computes the grid points satisfying 
+            - min(params)      <= p           <= max(params)
+            - delta_params_min <= delta_p     <= delta_params_max
+            - min(params)      <= p + delta_p <= max(params)
+            
+        """
         if params.ndim == 1:
             params = params[None, :]  # Convert to shape (1, n)
             delta_params_min = np.array([delta_params_min])
@@ -53,17 +55,14 @@ class ConsistentPolytope:
 
         return grid_points
 
+
     def __iter__(self):
-        """Allows iteration over the grid points."""
         return iter(self.grid_points)
+
 
     def visualize(self, param_dim: int = None):
         """
         Visualizes the grid points in scatter plots.
-
-        Parameters:
-            param_dim (int, optional): The index of the dimension to plot.
-                                       If None, plots all dimensions separately.
         """
         if len(self.grid_points) == 0:
             print("No grid points to visualize.")

@@ -30,7 +30,7 @@ def run_simulation():
     for algo_name in algo_names:
  
         ### Initialize the algorithm with the starting point
-        algorithm = algo_classes[algo_name](1, 1, nx)
+        algorithm = algo_classes[algo_name](m=1, L=1, nx=nx)
         algorithm.initialize(x0)
         xi_0 = algorithm.internal_state
         # algorithm.compute_bounds(p_set, delta_p_min, delta_p_max, @m(p), @L(p))
@@ -58,11 +58,15 @@ def run_simulation():
             ### Update algorithm parameters and perform step
             x_star_k, m_k, L_k = obj.get_objective_info()
             gradient_function = lambda x: obj.gradient(x)
-            algorithm.update_algorithm(m_k, L_k, gradient_function)
+
+            algorithm.update_sectors(m_k, L_k)
+            algorithm.update_gradient(gradient_function)
+
             xi_k, x_k = algorithm.step()
 
             xi_tilde_norm_list.append(np.linalg.norm(x_k - x_star_k))
 
+            ### calculate xi_star
             if algo_name == 'gradient':
                 xi_star_k = x_star_k
             elif algo_name in ['nesterov','tmm']:

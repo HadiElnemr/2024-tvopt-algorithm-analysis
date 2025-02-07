@@ -38,6 +38,11 @@ class PolynomialLyapunovMatrix:
         P_p = sum(self.lyap_basis[i].value * np.prod([p[j]**term.count(j) for j in range(self.param_dim)])
                    for i, term in enumerate(self.basis_terms))
         return P_p
+
+    
+    def cvx_reset(self):
+        del self.lyap_basis
+        self.lyap_basis = [cvx.Variable((self.n_eta, self.n_eta), symmetric=True) for _ in range(self.num_basis)]
     
 
     def min_max_eigval(self, p_grid):
@@ -64,7 +69,103 @@ class PolynomialLyapunovMatrix:
         return np.sqrt(max_eig / min_eig)
 
 
-class SdpSolver:
-    def __init__():
-        pass
+
+class Solver:
+    def __init__(self, algorithm, delta_model, rho_max, consistent_polytope, eps=1e-6):
+        self.algorithm = algorithm
+        self.delta_model = delta_model
+        self.rho_max = rho_max
+        self.consistent_polytope = consistent_polytope
+        self.eps = eps
+        self.IQCs = []
+    
+    def add_iqc(self, iqc):
+        """Add an IQC to the solver."""
+        self.IQCs.append(iqc)
+    
+    def setup_LMI(self, rho):
+        """Sets up the LMI system based on rho and IQCs."""
+        LMI_system = []
+        n_xi = self.algorithm.internal_state_dim
+        n_x, n_g = self.algorithm.nx, self.algorithm.nx
+        n_eta = n_xi + (1 if self.delta_model else 0)
+        I_n_eta = np.eye(n_eta)
+        
+        lyap = PolynomialLyapunovMatrix(param_dim=1, poly_degree=2, n_eta=n_eta)
+        t = cvx.Variable(1, nonneg=True)
+        t_I = cvx.multiply(t, I_n_eta)
+        
+        for p_k, delta_p in self.consistent_polytope:
+            p_kp1 = p_k + delta_p
+            P_k = lyap.P(p_k)
+            P_kp1 = lyap.P(p_kp1)
+            
+            self.algorithm.update_algorithm(m=1, L=p_k[0])
+            G = self.algorithm.get_state_space(delta_model=self.delta_model)
+            
+            M_combined = []
+            lambda_combined = []
+            
+            for iqc in self.IQCs:
+                iqc.update(p_k)
+                M_combined.append(iqc.lambda_var * iqc.M)
+                lambda_combined.append(iqc.lambda_var)
+            
+            M_total = cvx.bmat([[M_combined[i] if i == j else np.zeros_like(M_combined[i]) for j in range(len(M_combined))] for i in range(len(M_combined))])
+            
+            LMI_inner = cvx.bmat([
+                [-rho**2 * P_k, np.zeros((n_eta, n_eta)), np.zeros((n_eta, M_total.shape[0]))],
+                [np.zeros((n_eta, n_eta)), P_kp1, np.zeros((n_eta, M_total.shape[0]))],
+                [np.zeros((M_total.shape[0], n_eta)), np.zeros((M_total.shape[0], n_eta)), M_total]
+            ])
+            
+            LMI_system.append(LMI_inner << 0)
+            LMI_system.append(P_k >> self.eps * I_n_eta)
+            LMI_system.append(P_kp1 >> self.eps * I_n_eta)
+            LMI_system.append(P_k << t_I)
+            LMI_system.append(P_kp1 << t_I)
+            LMI_system.append(cvx.bmat([[P_k, I_n_eta], [I_n_eta, t_I]]) >> 0)
+            LMI_system.append(cvx.bmat([[P_kp1, I_n_eta], [I_n_eta, t_I]]) >> 0)
+        
+        return LMI_system, t, lambda_combined
+    
+    def optimize_for_rho(self):
+        """Performs bisection on rho to find the optimal value."""
+        rho_min = 0
+        rho_tol = 1e-3
+        sol = (np.nan, np.nan, np.nan, np.nan, np.nan)
+        
+        while (self.rho_max - rho_min > rho_tol):
+            rho = (rho_min + self.rho_max) / 2
+            LMI_system, _, _ = self.setup_LMI(rho)
+            
+            problem = cvx.Problem(cvx.Minimize(0), LMI_system)
+            try:
+                problem.solve(solver=cvx.MOSEK)
+            except cvx.SolverError:
+                pass
+            
+            if problem.status == cvx.OPTIMAL:
+                self.rho_max = rho
+            else:
+                rho_min = rho
+        
+        return self.rho_max
+    
+    def optimize_for_bound(self, epsilon=1e-4, k1=1e-3, k_lambdas=1e-3):
+        """Optimizes for bound given the best rho from optimize_for_rho."""
+        rho_opt = self.optimize_for_rho() + epsilon
+        LMI_system, t, lambda_combined = self.setup_LMI(rho_opt)
+        gamma = cvx.Variable(1, nonneg=True)
+        
+        objective = cvx.Minimize(t + k1 * gamma + sum(k_lambdas * l for l in lambda_combined))
+        problem = cvx.Problem(objective, LMI_system)
+        
+        try:
+            problem.solve(solver=cvx.MOSEK)
+        except cvx.SolverError:
+            pass
+        
+        return t.value, [l.value for l in lambda_combined], gamma.value
+
 
