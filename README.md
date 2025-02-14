@@ -1,9 +1,9 @@
 <!-- PROJECT SHIELDS -->
-[![GIT][git-shield]][git-url]
 [![arXiv][arxiv-shield]][arxiv-url]
 [![MIT License][license-shield]][license-url]
 [![ReseachGate][researchgate-shield]][researchgate-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+[![GIT][git-shield]][git-url]
 <!-- [![finalpaper][finalpaper-shield]][finalpaper-url] -->
 <!-- [![Scholar][scholar-shield]][scholar-url] -->
 <!-- [![Webpage][webpage-shield]][webpage-url] -->
@@ -35,7 +35,7 @@ To obtain the convergence rate of the different algorithms use the `convergence_
 
 📧 [fabian.jakob@ist.uni-stuttgart.de](mailto:fabian.jakob@ist.uni-stuttgart.de)
 
-[git-shield]: https://img.shields.io/badge/fjakob-grey?logo=github
+[git-shield]: https://img.shields.io/badge/Github-fjakob-white?logo=github
 [git-url]: https://github.com/fjakob
 [license-shield]: https://img.shields.io/badge/License-MIT-T?style=flat&color=blue
 [license-url]: https://github.com/col-tasas/2024-tvopt-algorithm-analysis/blob/main/LICENSE
