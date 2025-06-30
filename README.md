@@ -13,7 +13,7 @@ This repository contains the code from our paper
 
 > Jakob, Fabian, and Andrea Iannelli. "A Linear Parameter-Varying Framework for the Analysis of Time-Varying Optimization Algorithms." arXiv preprint. arXiv:2501.07461 (2025). 
 
-A more modular software library version of this repo will appear soon.
+**This repo is work in progress.** We will add more refined functionalities and improvements for numeric stability. For now you can use it to play around recreate the plots from the manuscript.
 
 ## Installation
 To install all relevant packages execute 
@@ -22,12 +22,7 @@ pip install -r requirements.txt
 ```
 
 ## Running Experiments
-To reproduce the case study run
-``` terminal
-python case_study.py
-```
-
-To obtain the convergence rate of the different algorithms use the `convergence_rates.ipynb` notebook.
+Some numeric case studies can be found in the notebook `numeric_study.ipynb`. You can use it to play around with some algorithms, bound sensitivities and to recreate the plots from the *numeric experiments* section.
 
 ## Contact
 
