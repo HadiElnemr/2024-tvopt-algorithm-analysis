@@ -39,12 +39,12 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
 
         ### SDP variables ###
         LMI_system = list()
-        
+
         lyap = PolynomialLyapunovMatrix(param_dim=1, poly_degree=2, n_eta=n_eta0)
 
         lambd_sector = cvx.Variable(1, nonneg=True)
         lambd_offby1 = cvx.Variable(1, nonneg=True)
-        
+
         gamm_xi = cvx.Variable(1, nonneg=True)
         gamm_d = cvx.Variable(1, nonneg=True)
         t      = cvx.Variable(1, nonneg=True)
@@ -68,8 +68,8 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
             DG_aug = np.block([[DG, np.zeros((n_g, n_xi)), np.zeros((n_g,n_g))]])
             G_aug  = ctrl.ss(AG, BG_aug, CG, DG_aug, dt=1)
 
-            ### Sector IQC ### 
-            D_psi = np.asarray([[L, -1], 
+            ### Sector IQC ###
+            D_psi = np.asarray([[L, -1],
                                 [-m, 1]])
             D_psi = np.block([[D_psi, np.zeros((2,n_xi+1))]])
 
@@ -91,13 +91,13 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
             D_psi = np.block([[L, -1, Z_1xi, 0],
                               [-m, 1, Z_1xi, 0],
                               [np.zeros((4,3+n_xi))]])
-            
+
             Psi_offby1 = ctrl.ss(A_psi, B_psi, C_psi, D_psi, dt=1)
 
             Psi = lti_stack(Psi_sector, Psi_offby1)
 
             # build Lur'e system
-            n_in = G_aug.ninputs 
+            n_in = G_aug.ninputs
             G_I = lti_stack(G_aug, np.eye(n_in))
             G_hat = ctrl.series(G_I, Psi)
             A_hat, B_hat, C_hat, D_hat = ctrl.ssdata(G_hat)
@@ -109,14 +109,14 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
             ### Multiplier ###
             M_sector = np.asarray([[0,1],
                                    [1,0]])
-            M_offby1 = linalg.block_diag(1/2*M_sector, 
+            M_offby1 = linalg.block_diag(1/2*M_sector,
                                          np.asarray([[1,0],
-                                                     [0,-1]]), 
+                                                     [0,-1]]),
                                          1/2*np.asarray([[1,0],
-                                                         [0,-1]])) 
+                                                         [0,-1]]))
             Multiplier = cvx.bmat([[lambd_sector * M_sector,         np.zeros((2,6))],
                                    [np.zeros((6,2)),         lambd_offby1 * M_offby1]])
-            
+
             LMI_inner = cvx.bmat([
                 [-rho**2 * P_k,              np.zeros((n_eta, n_eta)), np.zeros((n_eta, n_psi)), np.zeros((n_eta, n_xi)),             np.zeros((n_eta, 1))],
                 [np.zeros((n_eta, n_eta)),   P_kp1,                    np.zeros((n_eta, n_psi)), np.zeros((n_eta, n_xi)),             np.zeros((n_eta, 1))],
@@ -151,7 +151,9 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
 
         try:
             problem.solve(solver=cvx.MOSEK)
-        except(cvx.SolverError):
+        except cvx.SolverError as e:
+            # print("MOSEK failed:", e)
+            # problem.solve(solver=cvx.SCS)
             pass
     
         if problem.status == cvx.OPTIMAL:
@@ -170,5 +172,5 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
             rho_min = rho
 
         del lyap
-        
+
     return rho_max, sol
