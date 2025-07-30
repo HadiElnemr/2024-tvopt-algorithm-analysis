@@ -157,7 +157,6 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
             # get dimensions
             n_eta = A_hat.shape[0]
             n_psi = C_hat.shape[0]
-
             LMI_inner = cvx.bmat([
                 [-rho**2 * P_k,              np.zeros((n_eta, n_eta)), np.zeros((n_eta, n_psi)), np.zeros((n_eta, n_xi)),             np.zeros((n_eta, p))],
                 [np.zeros((n_eta, n_eta)),   P_kp1,                    np.zeros((n_eta, n_psi)), np.zeros((n_eta, n_xi)),             np.zeros((n_eta, p))],
@@ -198,7 +197,9 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
 
         try:
             problem.solve(solver=cvx.MOSEK)
-        except(cvx.SolverError):
+        except cvx.SolverError as e:
+            # print("MOSEK failed:", e)
+            # problem.solve(solver=cvx.SCS)
             pass
 
         if problem.status == cvx.OPTIMAL:
