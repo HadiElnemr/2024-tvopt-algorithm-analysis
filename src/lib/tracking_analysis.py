@@ -106,6 +106,9 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
     n_y = G.noutputs
     n_u = G.ninputs
 
+    # Get optimisation weights
+    k1,k2,k3,k4,k5 = weights
+
     ### get dimensions ###
     n_zeta = 4*p + q
     n_eta0 = n_xi + n_zeta
@@ -177,7 +180,7 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
 
             LMI_system.append(P_k   >> eps*np.eye(n_eta))
             LMI_system.append(P_kp1 >> eps*np.eye(n_eta))
-            LMI_system.append(LMI << 0)
+            LMI_system.append(LMI << 0) # LMI (5.15)
 
             LMI_system.append(P_k   << t_I)
             LMI_system.append(P_kp1 << t_I)
