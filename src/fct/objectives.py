@@ -37,14 +37,14 @@ class PeriodicExample2D(ObjectiveFunction):
     def update(self, t):
         self.current_t = t
 
-    def eval(self, x):
-        t = self.current_t
+    def eval(self, x, prev_t=False):
+        t = self.current_t if not prev_t else self.current_t - 1
         f_star = 0
         f = (x[0] - np.exp(np.cos(self.omega * t)))**2 + (x[1] - x[0] * np.tanh(np.sin(self.omega * t)))**2
         return f - f_star
 
-    def gradient(self, x):
-        t = self.current_t
+    def gradient(self, x, prev_t=False):
+        t = self.current_t if not prev_t else self.current_t - 1
         grad = np.zeros_like(x)
         grad[0] = 2 * (x[0] - np.exp(np.cos(self.omega * t))) - 2 * np.tanh(np.sin(self.omega * t)) * (x[1] - x[0] * np.tanh(np.sin(self.omega * t)))
         grad[1] = 2 * (x[1] - x[0] * np.tanh(np.sin(self.omega * t)))
@@ -65,7 +65,8 @@ class PeriodicExample2D(ObjectiveFunction):
             [-2 * np.tanh(np.sin(self.omega * t)), 2]
         ])
         eigs = np.linalg.eigvals(A)
-        return min(eigs), max(eigs)
+        return min(eigs), max(eigs) # or return (0.5?)(2+y^2 +- |y| * sqrt(y^2+4)) ) ; y = tanh(sin(omega*t))
+
 
 
 
@@ -107,7 +108,7 @@ class WindowedLeastSquares(ObjectiveFunction):
         if len(self.At_list) > self.n_data:
             self.At_list.pop(0)
             self.bt_list.pop(0)
-        
+
         self._AtA = sum(A.T @ A for A in self.At_list)
         self._Atb = sum(A.T @ b for A, b in zip(self.At_list, self.bt_list))
 
@@ -126,7 +127,7 @@ class WindowedLeastSquares(ObjectiveFunction):
         x_star = self._optimum()
         m, L = self._sector_constraints()
         return x_star, m, L
-    
+
     def _optimum(self):
         return np.linalg.solve(self._AtA, self._Atb)
 

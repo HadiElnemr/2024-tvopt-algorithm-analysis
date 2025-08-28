@@ -12,7 +12,7 @@ def bisection_thm1(algo, consistent_polytope, rho_max=1.5, eps=1e-6):
     pass
 
 
-def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_max=1.5, eps=1e-6):
+def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_max=1.5, eps=1e-6, weights=(1,1,1,1,1)):
 
     sol = None
 
@@ -20,6 +20,9 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
     G, p, q = algo(1,1)
     n_xi = G.nstates
     n_g  = G.ninputs
+
+    # Get optimisation weights
+    k1,k2,k3,k4,k5 = weights
 
     ### get dimensions ###
     n_zeta = 4
@@ -138,7 +141,7 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
 
             LMI_system.append(P_k   >> eps*np.eye(n_eta))
             LMI_system.append(P_kp1 >> eps*np.eye(n_eta))
-            LMI_system.append(LMI << 0)
+            LMI_system.append(LMI << 0) # LMI (5.15)
 
             LMI_system.append(P_k   << t_I)
             LMI_system.append(P_kp1 << t_I)
@@ -146,7 +149,7 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
             LMI_system.append(cvx.bmat([[P_kp1, I_n_eta], [I_n_eta, t_I]]) >> 0)
 
         # solve problem
-        cost = cvx.Minimize(t + lambd_offby1 + gamm_xi + gamm_d) if optimize_sensitivities else cvx.Minimize(0)
+        cost = cvx.Minimize(k1*t + k2*lambd_offby1 + k3*gamm_xi + k4*gamm_d + k5*rho) if optimize_sensitivities else cvx.Minimize(0)
         problem = cvx.Problem(cost, LMI_system)
 
         try:
@@ -155,7 +158,15 @@ def bisection_thm2(algo, consistent_polytope, optimize_sensitivities=False, rho_
             # print("MOSEK failed:", e)
             # problem.solve(solver=cvx.SCS)
             pass
-    
+        # print("Status:", problem.status)
+        # print("Objective value:", problem.value)
+        # print("Lambda_offby1:", lambd_offby1.value)
+        # print("Gamma_xi:", gamm_xi.value)
+        # print("Gamma_d:", gamm_d.value)
+
+        # print("Value:", x.value)
+        # print("Constraint residuals?", np.min(x.value), np.max(x.value))
+
         if problem.status == cvx.OPTIMAL:
             ### solution found, decrease rho, save solution
             rho_max = rho
