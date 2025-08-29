@@ -28,7 +28,7 @@ def heavy_ball(m,L):
     return ctrl.ss(A,B,C,D,dt=1), p, q
 
 
-def nesterov(m,L): 
+def nesterov(m,L):
     alpha = 1/L
     beta = (np.sqrt(L/m)-1) / (np.sqrt(L/m)+1)
 
@@ -49,9 +49,9 @@ def triple_momentum(m,L):
     beta = rho**2/(2-rho)
     gamma = rho**2/((1+rho)*(2-rho))
 
-    A = np.asarray([[1+beta, -beta], 
+    A = np.asarray([[1+beta, -beta],
                     [1,          0]])
-    B = np.asarray([[-alpha], 
+    B = np.asarray([[-alpha],
                     [0     ]])
     C = np.asarray([[1+gamma, -gamma]])
     D = 0

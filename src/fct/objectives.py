@@ -32,7 +32,7 @@ class PeriodicExample2D(ObjectiveFunction):
     def __init__(self, omega):
         super().__init__(nx=2)  # Periodic function is defined for nx=2
         self.omega = omega
-        self.current_t = None
+        self.current_t = 0
 
     def update(self, t):
         self.current_t = t
@@ -49,6 +49,15 @@ class PeriodicExample2D(ObjectiveFunction):
         grad[0] = 2 * (x[0] - np.exp(np.cos(self.omega * t))) - 2 * np.tanh(np.sin(self.omega * t)) * (x[1] - x[0] * np.tanh(np.sin(self.omega * t)))
         grad[1] = 2 * (x[1] - x[0] * np.tanh(np.sin(self.omega * t)))
         return grad
+
+    def hessian(self, x):
+        t = self.current_t
+        H = np.zeros((2, 2))
+        H[0, 0] = 2 + 2 * np.tanh(np.sin(self.omega * t))**2
+        H[0, 1] = -2 * np.tanh(np.sin(self.omega * t))
+        H[1, 0] = -2 * np.tanh(np.sin(self.omega * t))
+        H[1, 1] = 2
+        return H
 
     def get_objective_info(self):
         t = self.current_t

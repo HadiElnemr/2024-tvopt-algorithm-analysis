@@ -5,7 +5,7 @@ from .lure import LureComponent
 
 class Algorithm(LureComponent):
     """
-    
+
     """
 
     def __init__(self, m=1, L=1, nx=1, delta_model=False):
@@ -17,7 +17,7 @@ class Algorithm(LureComponent):
 
     def initialize(self, xi_0):
         self.internal_state = xi_0
-            
+
     def update_gradient(self, gradient_function):
         self.gradient_function = gradient_function
 
@@ -38,7 +38,7 @@ class Algorithm(LureComponent):
 
 class GradientDescent(Algorithm):
     """
-    
+
     """
 
     def __init__(self, m=1, L=1, nx=1, delta_model=False):
@@ -71,7 +71,7 @@ class GradientDescent(Algorithm):
 
 class Nesterov(Algorithm):
     """
-    
+
     """
 
     def __init__(self, m=1, L=1, nx=1, delta_model=False):
@@ -114,9 +114,9 @@ class Nesterov(Algorithm):
 
 class TMM(Algorithm):
     """
-    
+
     """
-    
+
     def __init__(self, m=1, L=1, nx=1, delta_model=False):
         super().__init__(m, L, nx, delta_model)
         self.name = 'Triple Momentum'

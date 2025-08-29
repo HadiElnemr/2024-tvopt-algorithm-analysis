@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from fct.algorithms import GradientDescent, Nesterov, TMM, Algorithm
+from fct.algorithms import GradientDescent, Nesterov, TMM, Algorithm # To be removed later
 from fct.objectives import PeriodicExample2D, WindowedLeastSquares
 from lib.tracking_analysis import bisection_thm1, bisection_thm2
 from lib.utils import consistent_polytope_nd
@@ -64,6 +64,25 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         Delta_delta_tm1_sm1 = []
         Delta_delta_t_s = []
         m_k, L_k = 1, 1
+
+        # compute algorithm parameters for off-by-1 IQC
+        algo = nesterov if algo_name == 'nesterov' else triple_momentum if algo_name == 'tmm' else gradient_descent if algo_name == 'gradient' else heavy_ball if algo_name == 'heavy_ball' else None
+        if algo is None:
+            raise ValueError(f"Algorithm {algo_name} not recognized.")
+        consistent_polytope = consistent_polytope_nd(p_set=np.array([[1, 10]]), delta_p_min=np.array([0]), delta_p_max=np.array([0]))
+        # print(f"Initial consistent polytope: {consistent_polytope}")
+
+
+
+
+        rho, sol = bisection_thm2(algo=algo, consistent_polytope=[(np.array([L_k]), 0)], optimize_bound=True)
+        algorithm.rho = rho
+        algorithm.c1,algorithm.c2 = sol[0]
+        algorithm.lambd = sol[1]
+        algorithm.gamma_xi = sol[2]
+        algorithm.gamma_delta = sol[3]
+        # print(f"c1, {algorithm.c1}, c2, {algorithm.c2}, rho, {algorithm.rho}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
+
         for k in tqdm(range(nk)):
 
             h_km1_xkm1 = h_k_xk  # old function evaluated at old iterate
@@ -137,12 +156,12 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
 
             epsilon_list.append(epsilon_k)
 
-            # compute algorithm parameters for sector IQC
-            algo = nesterov if algo_name == 'nesterov' else (triple_momentum if algo_name == 'tmm' else gradient_descent)
-            rho_sec, sol_sec = bisection_thm1(algo=algo, consistent_polytope=[(np.array([L_k]), 0)])
-            algorithm.rho_sec = rho_sec
-            algorithm.c_sec = sol_sec[0]
-            algorithm.lambd = sol_sec[1]
+            ### compute algorithm parameters for sector IQC
+            # algo = nesterov if algo_name == 'nesterov' else (triple_momentum if algo_name == 'tmm' else gradient_descent)
+            # rho_sec, sol_sec = bisection_thm1(algo=algo, consistent_polytope=[(np.array([L_k]), 0)])
+            # algorithm.rho_sec = rho_sec
+            # algorithm.c_sec = sol_sec[0]
+            # algorithm.lambd = sol_sec[1]
 
 
 
@@ -164,16 +183,6 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
                 error_bound_offby1.append(np.sqrt(bound_off))
                 continue
             ###############################
-
-            # compute algorithm parameters for off-by-1 IQC
-            algo = nesterov if algo_name == 'nesterov' else (triple_momentum if algo_name == 'tmm' else gradient_descent)
-            rho, sol = bisection_thm2(algo=algo, consistent_polytope=[(np.array([L_k]), 0)], optimize_sensitivities=True)
-            algorithm.rho = rho
-            algorithm.c1,algorithm.c2 = sol[0]
-            algorithm.lambd = sol[1][0]
-            algorithm.gamma_xi = sol[2][0]
-            algorithm.gamma_delta = sol[3][0]
-            # print(f"c1, {algorithm.c1}, c2, {algorithm.c2}, rho, {algorithm.rho}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
 
             ### Compute error bound based on off-by-1 IQC
             # initial term: c1 * rho^{2k} * ||\tilde{\xi}_0||^2

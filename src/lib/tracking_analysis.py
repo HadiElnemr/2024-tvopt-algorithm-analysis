@@ -107,7 +107,7 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
     n_u = G.ninputs
 
     # Get optimisation weights
-    k1,k2,k3,k4,k5 = weights
+    # k1,k2,k3,k4,k5 = weights
 
     ### get dimensions ###
     n_zeta = 4*p + q
