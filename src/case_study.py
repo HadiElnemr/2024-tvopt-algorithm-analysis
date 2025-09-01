@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from fct.algorithms import GradientDescent, Nesterov, TMM, Algorithm # To be removed later
 from fct.objectives import PeriodicExample2D, WindowedLeastSquares
 from lib.tracking_analysis import bisection_thm1, bisection_thm2, bisection_thm3
-from lib.utils import consistent_polytope_nd, calculate_L_bounds
+from lib.utils import consistent_polytope_nd, calculate_L_m_bounds
 from lib.algorithms_unconstrained import gradient_descent, nesterov, heavy_ball, triple_momentum
 from tqdm import tqdm
 
@@ -77,7 +77,7 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
             raise ValueError(f"Algorithm {algo_name} not recognized.")
 
         # Calculate L bounds
-        L_min, L_max, m_min, m_max, delta_L_max, delta_m_max = calculate_L_bounds(obj)
+        L_min, L_max, m_min, m_max, delta_L_max, delta_m_max = calculate_L_m_bounds(obj)
 
         L_range = np.logspace(np.log10(1/0.8 + 1e-3), 2, 10)
         m_range = L_range * 0.4
