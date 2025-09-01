@@ -2,14 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from fct.algorithms import GradientDescent, Nesterov, TMM, Algorithm # To be removed later
 from fct.objectives import PeriodicExample2D, WindowedLeastSquares
-from lib.tracking_analysis import bisection_thm1, bisection_thm2
-from lib.utils import consistent_polytope_nd
+from lib.tracking_analysis import bisection_thm1, bisection_thm2, bisection_thm3
+from lib.utils import consistent_polytope_nd, calculate_L_bounds
 from lib.algorithms_unconstrained import gradient_descent, nesterov, heavy_ball, triple_momentum
 from tqdm import tqdm
 
 
 def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None, T=None):
+    """Run simulation for given algorithms and objective function.
 
+    Parameters:
+    - algo_names: List of algorithm names to simulate. Options are 'gradient', 'nesterov', 'tmm'.
+    - obj: Objective function instance. If None, defaults to PeriodicExample2D.
+    - x0: Initial point. If None, defaults to a vector of fives.
+    - T: Time horizon. If None, defaults to 200.
+    """
     # Seed and time horizon
     np.random.seed(3)
     if T is None:
@@ -61,7 +68,6 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         grad_k_s = 0 # current gradient evaluate at current iterate
 
         Delta_delta_t_s_list = []
-        Delta_delta_tm1_sm1 = []
         Delta_delta_t_s = []
         m_k, L_k = 1, 1
 
@@ -69,19 +75,41 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         algo = nesterov if algo_name == 'nesterov' else triple_momentum if algo_name == 'tmm' else gradient_descent if algo_name == 'gradient' else heavy_ball if algo_name == 'heavy_ball' else None
         if algo is None:
             raise ValueError(f"Algorithm {algo_name} not recognized.")
-        consistent_polytope = consistent_polytope_nd(p_set=np.array([[1, 10]]), delta_p_min=np.array([0]), delta_p_max=np.array([0]))
-        # print(f"Initial consistent polytope: {consistent_polytope}")
 
+        # Calculate L bounds
+        L_min, L_max, m_min, m_max, delta_L_max, delta_m_max = calculate_L_bounds(obj)
 
+        L_range = np.logspace(np.log10(1/0.8 + 1e-3), 2, 10)
+        m_range = L_range * 0.4
+        # L = 10
+        # m = 10
+        n_grid = 2
+        grid_step = (L_max - L_min) / n_grid
 
+        params = np.array([np.linspace(L_min, L_max, n_grid + 1),
+            np.linspace(m_min, m_max, n_grid + 1)])
+
+        delta_L_max = lambda rate_bound: rate_bound * (L_max - L_min)
+        delta_m_max = lambda rate_bound: rate_bound * (m_max - m_min)
+
+        grid_points = consistent_polytope_nd(params, np.array([-delta_L_max(rate_bound=0.05),-delta_m_max(rate_bound=0.05)]),
+                                                np.array([-delta_L_max(rate_bound=0.05),-delta_m_max(rate_bound=0.05)]),
+                                                step_size=grid_step)
+
+        rho_sec, sol_sec = bisection_thm1(algo=algo, consistent_polytope=[(np.array([L_k]), 0)], optimize_bound=True)
+        algorithm.rho_sec = rho_sec
+        algorithm.c_sec = sol_sec
 
         rho, sol = bisection_thm2(algo=algo, consistent_polytope=[(np.array([L_k]), 0)], optimize_bound=True)
         algorithm.rho = rho
         algorithm.c1,algorithm.c2 = sol[0]
         algorithm.lambd = sol[1]
-        algorithm.gamma_xi = sol[2]
-        algorithm.gamma_delta = sol[3]
-        # print(f"c1, {algorithm.c1}, c2, {algorithm.c2}, rho, {algorithm.rho}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
+        algorithm.gamma_xi = float(sol[2])
+        algorithm.gamma_delta = float(sol[3])
+
+        # print(f"Algorithm parameters for {algo_name}: rho, {algorithm.rho}, c1, {algorithm.c1}, c2, {algorithm.c2}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
+
+        # Delta_delta_tm1_sm1 = [] # TODO to be used if p>1
 
         for k in tqdm(range(nk)):
 
@@ -156,14 +184,7 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
 
             epsilon_list.append(epsilon_k)
 
-            ### compute algorithm parameters for sector IQC
-            # algo = nesterov if algo_name == 'nesterov' else (triple_momentum if algo_name == 'tmm' else gradient_descent)
-            # rho_sec, sol_sec = bisection_thm1(algo=algo, consistent_polytope=[(np.array([L_k]), 0)])
-            # algorithm.rho_sec = rho_sec
-            # algorithm.c_sec = sol_sec[0]
-            # algorithm.lambd = sol_sec[1]
-
-
+            ############################## Bound Error based on Sector IQC ##############################
 
             ### Compute error bound based on sector IQC
             bound_sec = algorithm.c_sec * algorithm.rho_sec**k * np.linalg.norm(xi_tilde_0)
@@ -174,16 +195,17 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
             error_bound_sector.append(bound_sec)
 
             ################################ For testing purposes only
-            test_old = not True
-            if test_old:
-                bound_off = (algorithm.c2 / algorithm.c1) * algorithm.rho**(2*k) * np.linalg.norm(xi_tilde_0)**2
-                if k >= 1:
-                    for jdx, (Delta_xi_jm1, epsilon_jm1) in enumerate(zip(Delta_xi_list, epsilon_list)):
-                        bound_off += (1/algorithm.c1) * algorithm.rho**(2*(k - (jdx+1))) * (algorithm.gamma * np.linalg.norm(Delta_xi_jm1)**2 + algorithm.lambd * epsilon_jm1)
-                error_bound_offby1.append(np.sqrt(bound_off))
-                continue
-            ###############################
+            # test_old = not True
+            # if test_old:
+            #     bound_off = (algorithm.c2 / algorithm.c1) * algorithm.rho**(2*k) * np.linalg.norm(xi_tilde_0)**2
+            #     if k >= 1:
+            #         for jdx, (Delta_xi_jm1, epsilon_jm1) in enumerate(zip(Delta_xi_list, epsilon_list)):
+            #             bound_off += (1/algorithm.c1) * algorithm.rho**(2*(k - (jdx+1))) * (algorithm.gamma * np.linalg.norm(Delta_xi_jm1)**2 + algorithm.lambd * epsilon_jm1)
+            #     error_bound_offby1.append(np.sqrt(bound_off))
+            #     continue
+            ################################
 
+            ############################## Bound Error based on Off-by-1 IQC ##############################
             ### Compute error bound based on off-by-1 IQC
             # initial term: c1 * rho^{2k} * ||\tilde{\xi}_0||^2
             bound_off = algorithm.c1 * algorithm.rho**(2*k) * np.linalg.norm(xi_tilde_0)**2
@@ -191,8 +213,6 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
             if k >= 1:
                 for jdx, (Delta_xi_jm1, epsilon_jm1) in enumerate(zip(Delta_xi_list, epsilon_list)):
                     # bound_off += (1/algorithm.c1) * algorithm.rho**(2*(k - (jdx+1))) * (algorithm.gamma * np.linalg.norm(Delta_xi_jm1)**2 + algorithm.lambd * epsilon_jm1)
-
-
                     # sum1 = c2 * rho^{2(k-t)} * [ gamma_xi * ||\Delta \xi_{t-1}||^2 + gamma_delta * inner_sum_1 ]
                     delta_xi_term = algorithm.gamma_xi * np.linalg.norm(Delta_xi_jm1)**2
 
@@ -204,12 +224,10 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
                         inner_sum_1 += np.linalg.norm(Delta_delta_tm1_sm1)**2
 
                     delta_delta_term = algorithm.gamma_delta * inner_sum_1
-                    # print(f'-----------------jdx={jdx}------------------')
 
                     bound_off += algorithm.c2 * algorithm.rho**(2*(k - (jdx+1))) * (
                                 delta_xi_term + delta_delta_term
                                 )
-                # Try without this term for now
                 inner_sum_2 = 0
                 for idx in range(algorithm.p):
                     for t in range(k):
@@ -221,15 +239,10 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
                             (L_km1 - m_km1) * f_hat_tm1_s_tm1 -
                             (L_k - m_k) * f_hat_t_s_tm1
                         )
-                    # print(f'-----------------idx={idx}------------------')
-
-
 
                 bound_off += inner_sum_2
 
             error_bound_offby1.append(np.sqrt(bound_off))
-            # print(f"Time step {k}, error_bound_offby1.append(np.sqrt(bound_off)) = {np.sqrt(bound_off)}")
-
             ### update values
             xi_star_km1 = xi_star_k
             x_km1 = x_k

@@ -46,15 +46,6 @@ class GradientDescent(Algorithm):
         self.name = 'Gradient descent'
         self.internal_state_dim = nx
 
-        self.rho_sec = 0.6318359375
-        self.c_sec = np.sqrt(2.859068913472761 / 1.1575401168126431)
-        self.rho = 0.6328125
-        self.c1 = 1.0017965030963322e-08
-        self.c2 = 1.0017965030963322e-08
-        self.lambd = 3.03256438e-08
-        self.gamma = 0.00022899
-
-
     def _update_state_space(self):
         alpha = 2 / (self.m + self.L)
         if not self.delta_model:
@@ -78,15 +69,6 @@ class Nesterov(Algorithm):
         super().__init__(m, L, nx, delta_model)
         self.name = 'Nesterov'
         self.internal_state_dim = 2*nx
-
-        self.rho_sec = 0.7431640625
-        self.c_sec = np.sqrt(6.050500616022587 / 0.26579072189881897)
-        self.rho = 0.6123046875
-        self.c1 = 9.998672902258121e-09
-        self.c2 = 6.189468678701481e-06
-        self.lambd = 1.56240033e-07
-        self.gamma = 0.00056876
-
 
     def _update_state_space(self):
         kappa = self.L / self.m
@@ -121,15 +103,6 @@ class TMM(Algorithm):
         super().__init__(m, L, nx, delta_model)
         self.name = 'Triple Momentum'
         self.internal_state_dim = 2*nx
-
-        self.rho_sec = 0.7587890625
-        self.c_sec = np.sqrt(4.047296067390364 / 0.27569653200654654)
-        self.rho = 0.5478515625
-        self.c1 = 1.0337403927838955e-08
-        self.c2 = 1.1644883671899747e-05
-        self.lambd = 2.54734376e-07
-        self.gamma = 0.00089642
-
 
     def _update_state_space(self):
         kappa = self.L / self.m

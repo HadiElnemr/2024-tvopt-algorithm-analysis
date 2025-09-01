@@ -1,4 +1,5 @@
 import numpy as np
+from fct.objectives import ObjectiveFunction
 
 def consistent_polytope_nd(params, delta_params_min, delta_params_max, step_size=0.1):
     """
@@ -60,3 +61,51 @@ def consistent_polytope_nd(params, delta_params_min, delta_params_max, step_size
             grid_points.append((p_k, delta_p))
 
     return grid_points
+
+def calculate_L_bounds(objective:ObjectiveFunction):
+    """
+    Calculate L_max, L_min, delta_L_max and delta_m_max for a given function
+
+    Parameters:
+    - objective: An instance of a function class (e.g., PeriodicExample2D, WindowedLeastSquares)
+
+    Returns:
+    - L_min: Minimum Lipschitz constant
+    - L_max: Maximum Lipschitz constant
+    - m_min: Minimum strong convexity constant
+    - m_max: Maximum strong convexity constant
+    - delta_L_max: Maximum change in Lipschitz constant between consecutive points
+    - delta_m_max: Maximum change in strong convexity constant between consecutive points
+    """
+
+    t = 200
+    delta_L_max = 0
+    delta_m_max = 0
+    L_min = 100
+    L_max = 0
+    m_min = 100
+    m_max = 0
+    L_prev = 0
+    m_prev = 0
+
+    # Update the objective function over time
+    for k in range(t+1):
+        objective.update(k)
+        _, m_k, L_k = objective.get_objective_info()
+
+        if m_k - m_prev > delta_m_max:
+            delta_m_max = m_k - m_prev
+        if L_k - L_prev > delta_L_max:
+            delta_L_max = L_k - L_prev
+        if m_k < m_min:
+            m_min = m_k
+        if m_k > m_max:
+            m_max = m_k
+        if L_k < L_min:
+            L_min = L_k
+        if L_k > L_max:
+            L_max = L_k
+        m_prev = m_k
+        L_prev = L_k
+
+    return L_min, L_max, m_min, m_max, delta_L_max, delta_m_max
