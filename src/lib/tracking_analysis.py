@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import cvxpy as cvx
 import control as ctrl
 import scipy.linalg as linalg
@@ -6,6 +7,24 @@ import scipy.linalg as linalg
 from lib.lyapunov_matrix import PolynomialLyapunovMatrix
 from lib.lure import build_lure_system, build_multiplier
 
+from tqdm import tqdm
+
+## Suppress noisy MOSEK array-format warnings emitted indirectly via CVXPY
+warnings.filterwarnings(
+    "ignore",
+    message=r"Argument sub in putvarboundlist: Incorrect array format causing data to be copied",
+    module=r"mosek"
+)
+warnings.filterwarnings(
+    "ignore",
+    message=r"Argument subj in putclist: Incorrect array format causing data to be copied",
+    module=r"mosek"
+)
+warnings.filterwarnings(
+    "ignore",
+    message=r"Argument sub in putconboundlist: Incorrect array format causing data to be copied",
+    module=r"mosek"
+)
 
 def bisection_thm1(algo, consistent_polytope, optimize_bound=True, rho_max=1.5, eps=1e-6):
     sol = None
@@ -28,7 +47,6 @@ def bisection_thm1(algo, consistent_polytope, optimize_bound=True, rho_max=1.5, 
         LMI_system = list()
 
         lyap = PolynomialLyapunovMatrix(param_dim=1, poly_degree=2, n_eta=n_xi)
-
         Multiplier, Variables = build_multiplier(p, q, vIQC=False)
 
         t       = cvx.Variable(1, nonneg=True)
@@ -43,7 +61,7 @@ def bisection_thm1(algo, consistent_polytope, optimize_bound=True, rho_max=1.5, 
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = 1, p_k[0]
+            m, L = p_k[1], p_k[0]
             G, p, q = algo(m,L)
 
             G_hat, Psi = build_lure_system(G, m, L, p, q, vIQC=False)
@@ -145,7 +163,7 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = 1, p_k[0]
+            m, L = p_k[1], p_k[0]
             G, p, q = algo(m,L)
             AG, BG, CG, DG = ctrl.ssdata(G)
 

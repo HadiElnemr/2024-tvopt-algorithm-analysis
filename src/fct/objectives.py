@@ -37,8 +37,8 @@ class PeriodicExample2D(ObjectiveFunction):
     def update(self, t):
         self.current_t = t
 
-    def eval(self, x, prev_t=False):
-        t = self.current_t if not prev_t else self.current_t - 1
+    def eval(self, x, t=None, prev_t=False):
+        t = t if t else self.current_t if not prev_t else self.current_t - 1
         f_star = 0
         f = (x[0] - np.exp(np.cos(self.omega * t)))**2 + (x[1] - x[0] * np.tanh(np.sin(self.omega * t)))**2
         return f - f_star
@@ -74,7 +74,7 @@ class PeriodicExample2D(ObjectiveFunction):
             [-2 * np.tanh(np.sin(self.omega * t)), 2]
         ])
         eigs = np.linalg.eigvals(A)
-        return min(eigs), max(eigs) # or return (0.5?)(2+y^2 +- |y| * sqrt(y^2+4)) ) ; y = tanh(sin(omega*t))
+        return min(eigs), max(eigs) # or return ( 2+y^2 +- |y| * sqrt(y^2+4)) ) ; y = tanh(sin(omega*t))
 
 
 
