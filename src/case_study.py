@@ -71,7 +71,12 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         m_k, L_k = 1, 1
 
         # compute algorithm parameters for off-by-1 IQC
-        algo = nesterov if algo_name == 'nesterov' else triple_momentum if algo_name == 'tmm' else gradient_descent if algo_name == 'gradient' else heavy_ball if algo_name == 'heavy_ball' else None
+        algo = nesterov if algo_name == 'nesterov' \
+          else triple_momentum if algo_name == 'tmm' \
+          else gradient_descent if algo_name == 'gradient' \
+          else heavy_ball if algo_name == 'heavy_ball' \
+          else None
+
         if algo is None:
             raise ValueError(f"Algorithm {algo_name} not recognized.")
 
@@ -104,7 +109,7 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         algorithm.gamma_xi = np.asarray(sol[2]).item()
         algorithm.gamma_delta = np.asarray(sol[3]).item()
 
-        # print(f"Algorithm parameters for {algo_name}: rho, {algorithm.rho}, c1, {algorithm.c1}, c2, {algorithm.c2}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
+        print(f"Algorithm parameters for {algo_name}: rho, {algorithm.rho}, c1, {algorithm.c1}, c2, {algorithm.c2}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
 
         # Delta_delta_km1_s_km1 = [] # TODO to be used if p>1
 

@@ -82,20 +82,20 @@ def calculate_L_m_bounds(objective:ObjectiveFunction):
     """
 
     t = 200
-    delta_L_max = 0
-    delta_m_max = 0
-    _, m_k, L_k = objective.get_objective_info()
-    delta_L_min = L_k
-    delta_m_min = m_k
-    m_prev = m_k
-    L_prev = L_k
-    m_min = m_k
-    m_max = m_k
-    L_min = L_k
-    L_max = L_k
+    delta_L_max = -np.inf
+    delta_m_max = -np.inf
+    _, m_0, L_0 = objective.get_objective_info()
+    delta_L_min = np.inf
+    delta_m_min = np.inf
+    m_prev = m_0
+    L_prev = L_0
+    m_min = m_0
+    m_max = m_0
+    L_min = L_0
+    L_max = L_0
 
     # Update the objective function over time
-    for k in range(t+1):
+    for k in range(1, t+1):
         objective.update(k)
         _, m_k, L_k = objective.get_objective_info()
 
