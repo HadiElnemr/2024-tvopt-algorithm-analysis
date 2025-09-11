@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import pickle
 from dataclasses import dataclass
 from tqdm import tqdm
 
@@ -319,8 +321,32 @@ def simulate_once(algo_name, obj, x0, T, sens: Sens):
 # ---------- compare across sensitivities ----------
 def compare_sensitivities(algo_name, obj, x0, T, sens_list, score="sum"):
     results = []
+    idx = 0
+    tracking_error = []
+    
     for s in tqdm(sens_list, desc=f"{algo_name} sensitivities"):
-        tracking_error, error_bound = simulate_once(algo_name, obj, x0, T, s)
+        # Use a cache to avoid recomputation of simulate_once for the same parameters
+        cache_dir = "sim_cache"
+        os.makedirs(cache_dir, exist_ok=True)
+        # Create a unique filename based on algo_name, T, and sensitivity parameters
+        def sens_to_tuple(s):
+            # Handles both Sens and Sens_sec dataclasses
+            if hasattr(s, '__dataclass_fields__'):
+                return tuple(getattr(s, f) for f in s.__dataclass_fields__)
+            else:
+                return tuple(s)
+        cache_key = (algo_name, T, tuple(x0), sens_to_tuple(s))
+        cache_file = os.path.join(cache_dir, f"sim_{hash(cache_key)}.pkl")
+
+        if os.path.exists(cache_file):
+            with open(cache_file, "rb") as f:
+                tracking_error, error_bound = pickle.load(f)
+        else:
+            tracking_error, error_bound = simulate_once(algo_name, obj, x0, T, s)
+            print("idx:", idx, len(tracking_error))
+            idx += 1
+            with open(cache_file, "wb") as f:
+                pickle.dump((tracking_error, error_bound), f)
         if score == "max":
             val = float(np.max(error_bound))
         elif score == "mean":
@@ -330,7 +356,16 @@ def compare_sensitivities(algo_name, obj, x0, T, sens_list, score="sum"):
         else:
             raise ValueError("score ∈ {'max','mean','sum'}")
         results.append((val, s, error_bound))
+    
+    print("outside         idx:", idx, len(tracking_error))
     results.sort(key=lambda t: t[0])
+    
+    # Fixed: Check if sens_list is empty before accessing its first element
+    if len(sens_list) > 0:
+        print("algo_name:", algo_name, f"sens_list length {type(sens_list[0])}: {len(sens_list)}")
+    else:
+        print("algo_name:", algo_name, f"sens_list length: {len(sens_list)} (empty)")
+    
     return tracking_error, results  # ranked: sorted best→worst according to val which could be the sum
 
 # ---------- driver ----------
@@ -348,6 +383,11 @@ def run_comparison(algo_name, T=200, seed=3, score='sum'):
     tracking_error_sec, ranked_sec = compare_sensitivities(algo_name, obj, x0, T, sens_list_sec, score=score)
 
     best_val, best_s, best_bound = ranked[0] # Take best result from off-by-1, which contains `score value`, `sensitivity`, and `error bound`
+    
+    if len(ranked_sec) == 0:
+        print(f"[{algo_name}] No sectional sensitivity candidates found.")
+        return
+    
     best_val_sec, best_s_sec, best_bound_sec = ranked_sec[0] # Take best result from sectional
 
     print(f"[{algo_name}] best {score} bound = {best_val:.6g} with Sens("
