@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from fct.algorithms import GradientDescent, Nesterov, TMM, Algorithm # To be removed later
 from fct.objectives import PeriodicExample2D, WindowedLeastSquares
-from lib.tracking_analysis import bisection_thm1, bisection_thm2, bisection_thm3
+from lib.tracking_analysis import bisection_thm1, bisection_thm2
 from lib.utils import consistent_polytope_nd, calculate_L_m_bounds, visualize
 from lib.algorithms_unconstrained import gradient_descent, nesterov, heavy_ball, triple_momentum
 from tqdm import tqdm
@@ -87,20 +87,26 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         n_grid = 2
         grid_step = (L_max - L_min) / n_grid
 
-        params = np.array([np.linspace(L_min, L_max, n_grid + 1),
-            np.linspace(m_min, m_max, n_grid + 1)])
-        # Grid points consisting of p_k and delta_p === p(theta) Δtheta
-        grid_points = consistent_polytope_nd(params, np.array([ delta_L_min, delta_m_min]),
-                                                     np.array([ delta_L_max, delta_m_max]),
-                                                     step_size=grid_step)
+        n_sparse = 4
+        t_min, t_max = 0, np.tanh(1)
+
+        delta_params_min = np.array([delta_m_min, delta_L_min])
+        delta_params_max = np.array([delta_m_max, delta_L_max])
+
+        t = np.linspace(t_min, t_max, n_sparse)
+        m = 2 + t**2 - t * np.sqrt(t**2 + 4)
+        L = 2 + t**2 + t * np.sqrt(t**2 + 4)
+        params = np.vstack((m, L))
+        step_size = ( np.min(delta_params_max) - np.max(delta_params_min) ) / n_sparse
+        grid_points = consistent_polytope_nd(params, delta_params_min, delta_params_max, step_size=step_size)
+
         # visualize(grid_points)
         # print(grid_points)
-
-        # rho_sec, sol_sec = bisection_thm1(algo=algo, consistent_polytope=[(np.array([L_k]), 0)], optimize_bound=True)
 
         rho_sec, sol_sec = bisection_thm1(algo=algo, consistent_polytope=grid_points, optimize_bound=True)
         algorithm.rho_sec = rho_sec
         algorithm.c_sec = sol_sec
+        print(f"Algorithm parameters for {algo_name}: rho_sec, {rho_sec}, c_sec=Cond(P)=, {sol_sec}")
 
         rho, sol = bisection_thm2(algo=algo, consistent_polytope=grid_points, optimize_bound=True)
         algorithm.rho = rho
@@ -108,8 +114,7 @@ def run_simulation(algo_names=['gradient', 'nesterov', 'tmm'], obj=None, x0=None
         algorithm.lambd = sol[1]
         algorithm.gamma_xi = np.asarray(sol[2]).item()
         algorithm.gamma_delta = np.asarray(sol[3]).item()
-
-        print(f"Algorithm parameters for {algo_name}: rho, {algorithm.rho}, c1, {algorithm.c1}, c2, {algorithm.c2}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
+        print(f"Algorithm parameters for {algo_name}: rho, {algorithm.rho}, c1, {algorithm.c1}, c1=cond(P)**2, cond(P)={np.sqrt(algorithm.c1)}, c2, {algorithm.c2}, lambda, {algorithm.lambd}, gamma_xi, {algorithm.gamma_xi}, gamma_delta, {algorithm.gamma_delta}")
 
         # Delta_delta_km1_s_km1 = [] # TODO to be used if p>1
 

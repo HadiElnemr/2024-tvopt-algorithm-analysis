@@ -5,7 +5,7 @@ from lib.tracking_analysis import bisection_thm1, bisection_thm2
 from fct.algorithms import GradientDescent, Nesterov, TMM, Algorithm
 from lib.algorithms_unconstrained import gradient_descent, nesterov, triple_momentum
 
-def calculate_L_bounds(objective, n_points=1000):
+def calculate_L_m_bounds(objective, n_points=1000):
     """
     Calculate L_max, L_min, delta_L_max and delta_m_max for a given function
 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     objective = PeriodicExample2D(omega=0.1)
 
     # Calculate L bounds
-    # L_min, L_max, delta_L_max, delta_m_max = calculate_L_bounds(objective)
+    # L_min, L_max, delta_L_max, delta_m_max = calculate_L_m_bounds(objective)
     # print(f"L_min: {L_min}, L_max: {L_max}, delta_L_max: {delta_L_max}, delta_m_max: {delta_m_max}")
 
     L = 10

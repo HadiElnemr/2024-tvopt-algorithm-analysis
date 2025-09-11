@@ -61,7 +61,7 @@ def bisection_thm1(algo, consistent_polytope, optimize_bound=True, rho_max=1.5, 
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = p_k[1], p_k[0]
+            m, L = p_k[0], p_k[1]
             G, p, q = algo(m,L)
 
             G_hat, Psi = build_lure_system(G, m, L, p, q, vIQC=False)
@@ -161,7 +161,7 @@ def calculate_sensitivities_over_rhos_sectional(algo,
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = p_k[1], p_k[0]
+            m, L = p_k[0], p_k[1]
             G, p, q = algo(m,L)
 
             G_hat, Psi = build_lure_system(G, m, L, p, q, vIQC=False)
@@ -254,7 +254,7 @@ def bisection_thm1_with_intermediate_rho_sens(algo, consistent_polytope, optimiz
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = p_k[1], p_k[0]
+            m, L = p_k[0], p_k[1]
             G, p, q = algo(m,L)
 
             G_hat, Psi = build_lure_system(G, m, L, p, q, vIQC=False)
@@ -356,7 +356,7 @@ def bisection_thm2(algo, consistent_polytope, optimize_bound=False, rho_max=1.5,
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = p_k[1], p_k[0]
+            m, L = p_k[0], p_k[1]
             G, p, q = algo(m,L)
             AG, BG, CG, DG = ctrl.ssdata(G)
 
@@ -493,7 +493,7 @@ def bisection_thm2_with_intermediate_rho_sens(algo, consistent_polytope, optimiz
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = p_k[1], p_k[0]
+            m, L = p_k[0], p_k[1]
             G, p, q = algo(m,L)
             AG, BG, CG, DG = ctrl.ssdata(G)
 
@@ -601,7 +601,7 @@ def calculate_sensitivities_over_rhos(
     # iterate over rho grid
     rhos = np.arange(rho_lo, rho_hi + 1e-12, rho_step)
 
-    for rho in tqdm(rhos, desc="Thm5 bisection over rho"):
+    for rho in tqdm(rhos, desc="Calc sensitivities over rho"):
         entry = {
             'rho': float(np.round(rho, 4)),
             # 'feasible': False,
@@ -632,7 +632,7 @@ def calculate_sensitivities_over_rhos(
             P_kp1 = lyap.P(p_kp1)
 
             ### algorithm ### TODO: update with lambda function m(p_k), L(p_k) instead of m=1, L=p_k
-            m, L = p_k[1], p_k[0]
+            m, L = p_k[0], p_k[1]
             G, p, q = algo(m, L)
             AG, BG, CG, DG = ctrl.ssdata(G)
 

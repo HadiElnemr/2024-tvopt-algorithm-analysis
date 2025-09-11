@@ -16,10 +16,12 @@ def gradient_descent(m,L):
 
 def heavy_ball(m,L):
     alpha = (2/(np.sqrt(L)+np.sqrt(m)))**2
-    beta = (np.sqrt(L/m)-1) / (np.sqrt(L/m)+1)
+    beta = (np.sqrt(L/m)-1) / (np.sqrt(L/m)+1)**2 # TODO: This should be squared according to Lessard's paper
 
-    A = np.asarray([[1+beta, -beta], [1, 0]])
-    B = np.asarray([[-alpha], [0]])
+    A = np.asarray([[1+beta, -beta],
+                    [1,          0]])
+    B = np.asarray([[-alpha],
+                    [0     ]])
     C = np.asarray([[1, 0]])
     D = 0
 
@@ -32,8 +34,10 @@ def nesterov(m,L):
     alpha = 1/L
     beta = (np.sqrt(L/m)-1) / (np.sqrt(L/m)+1)
 
-    A = np.asarray([[1+beta, -beta], [1, 0]])
-    B = np.asarray([[-alpha], [0]])
+    A = np.asarray([[1+beta, -beta],
+                    [1,          0]])
+    B = np.asarray([[-alpha],
+                    [0     ]])
     C = np.asarray([[1+beta, -beta]])
     D = 0
 
